@@ -1,14 +1,14 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, jsonify
 from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
-# Configure MySQL from environment variables
-app.config['MYSQL_HOST'] = os.environ.get("MYSQL_HOST", "mysql-db")
-app.config['MYSQL_USER'] = os.environ.get("MYSQL_USER", "root")
+# Configure MySQL from environment variables (defaults align with docker-compose)
+app.config['MYSQL_HOST'] = os.environ.get("MYSQL_HOST", "mysql")
+app.config['MYSQL_USER'] = os.environ.get("MYSQL_USER", "admin")
 app.config['MYSQL_PASSWORD'] = os.environ.get("MYSQL_PASSWORD", "admin")
-app.config['MYSQL_DB'] = os.environ.get("MYSQL_DB", "myDB")
+app.config['MYSQL_DB'] = os.environ.get("MYSQL_DB", "devops")
 
 # Initialize MySQL
 mysql = MySQL(app)
@@ -22,7 +22,7 @@ def init_db():
             message TEXT
         );
         ''')
-        mysql.connection.commit()  
+        mysql.connection.commit()
         cur.close()
 
 @app.route('/')
@@ -41,6 +41,11 @@ def submit():
     mysql.connection.commit()
     cur.close()
     return jsonify({'message': new_message})
+
+# Healthcheck route for docker-compose
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok"}), 200
 
 if __name__ == '__main__':
     init_db()
